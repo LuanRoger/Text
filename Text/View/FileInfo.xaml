@@ -1,0 +1,53 @@
+﻿<Fluent:RibbonWindow xmlns:Fluent="urn:fluent-ribbon" x:Class="Text.View.FileInfo"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" WindowStartupLocation="CenterScreen"
+        IsIconVisible="False"
+        Title="Informações do Arquivo" Height="380" Width="300"
+        MinHeight="300" MinWidth="270">
+    <Grid Margin="2">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="1.5*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="100"/>
+            <RowDefinition Height="20"/>
+            <RowDefinition Height="20"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="20"/>
+            <RowDefinition Height="20"/>
+            <RowDefinition Height="20"/>
+            <RowDefinition Height="20"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <Image Grid.Column="0" Grid.Row="0" x:Name="imgFileText"
+               VerticalAlignment="Stretch" HorizontalAlignment="Stretch"/>
+        <TextBlock Text="Null" x:Name="txtFileName" Grid.Row="0" Grid.Column="1" FontSize="15"
+                   HorizontalAlignment="Left" VerticalAlignment="Center"/>
+
+        <Separator Grid.Column="0" Grid.Row="1" Grid.ColumnSpan="3"/>
+
+        <TextBlock Text="Tamanho do arquivo:" Grid.Column="0" Grid.Row="2"/>
+        <TextBlock Text="Null" x:Name="txtFileSize" Grid.Column="1" Grid.Row="2" Grid.ColumnSpan="2"/>
+
+        <TextBlock Text="Caminho do arquivo:" Grid.Column="0" Grid.Row="3"/>
+        <TextBlock Text="Null" x:Name="txtFileSource" Grid.Column="1" Grid.Row="3" Grid.ColumnSpan="2" TextWrapping="Wrap"/>
+
+        <Separator Grid.Column="0" Grid.Row="4" Grid.ColumnSpan="3"/>
+
+        <TextBlock Text="Ultima alteração:" Grid.Column="0" Grid.Row="5"/>
+        <TextBlock Text="Null" x:Name="txtLastUpdate" Grid.Column="1" Grid.Row="5" Grid.ColumnSpan="2"/>
+
+        <TextBlock Text="Criadom em:" Grid.Column="0" Grid.Row="6"/>
+        <TextBlock Text="Null" x:Name="txtCreateDate" Grid.Column="1" Grid.Row="6" Grid.ColumnSpan="2"/>
+
+        <TextBlock Text="Ultimo acesso:" Grid.Column="0" Grid.Row="7"/>
+        <TextBlock Text="Null" x:Name="txtLastAccess" Grid.Column="1" Grid.Row="7" Grid.ColumnSpan="2"/>
+
+        <Button Content="Fechar" x:Name="btnFecharInfo" VerticalAlignment="Bottom" HorizontalAlignment="Right" Grid.Column="2" Grid.Row="8" Margin="5"/>
+    </Grid>
+</Fluent:RibbonWindow>

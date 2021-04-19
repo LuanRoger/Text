@@ -1,0 +1,131 @@
+﻿<Fluent:RibbonWindow xmlns:Fluent="urn:fluent-ribbon" x:Class="Text.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        WindowStartupLocation="CenterScreen"
+        Title="FileName*" Height="450" Width="800">
+
+    <Fluent:RibbonWindow.Resources>
+        <SolidColorBrush x:Key="Fluent.Ribbon.Brushes.RibbonTabControl.Background">White</SolidColorBrush>
+        <SolidColorBrush x:Key="Fluent.Ribbon.Brushes.RibbonTabControl.TabsGrid.Background">White</SolidColorBrush>
+        <SolidColorBrush x:Key="Fluent.Ribbon.Brushes.RibbonTabControl.Content.Background">White</SolidColorBrush>
+        <SolidColorBrush x:Key="Fluent.Ribbon.Brushes.RibbonWindow.TitleBackground">White</SolidColorBrush>
+    </Fluent:RibbonWindow.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <Fluent:Ribbon Grid.Row="0" Grid.ColumnSpan="2">
+
+            <Fluent:Ribbon.QuickAccessItems>
+                <Fluent:QuickAccessMenuItem>
+                    <Fluent:Button Header="Abrir" x:Name="btnQaAbrir" Icon="assets/imgs/open_file.png"/>
+                </Fluent:QuickAccessMenuItem>
+                <Fluent:QuickAccessMenuItem>
+                    <Fluent:Button Header="Abrir em nova jenela" x:Name="btnQaAbrirJanela" Icon="assets/imgs/open_window.png"/>
+                </Fluent:QuickAccessMenuItem>
+                <Fluent:QuickAccessMenuItem>
+                    <Fluent:Button Header="Salvar" x:Name="btnQaSalvar" Icon="assets/imgs/save.png" Click="BtnSave_Click"/>
+                </Fluent:QuickAccessMenuItem>
+                <Fluent:QuickAccessMenuItem>
+                    <Fluent:Button Header="Cortar" x:Name="btnQaCortar" Icon="assets/imgs/cut.png"/>
+                </Fluent:QuickAccessMenuItem>
+                <Fluent:QuickAccessMenuItem>
+                    <Fluent:Button Header="Colar" x:Name="btnQaColar" Icon="assets/imgs/paste.png"/>
+                </Fluent:QuickAccessMenuItem>
+            </Fluent:Ribbon.QuickAccessItems>
+
+            <Fluent:Ribbon.Menu>
+                <Fluent:Backstage>
+                    <Fluent:BackstageTabControl>
+                        <Fluent:Button Header="Abrir" x:Name="btnAbrirArquivo"/>
+                        <Fluent:Button Header="Abrir em nova janela" x:Name="btnAbrirArquivoJanela"/>
+                        <Fluent:SeparatorTabItem/>
+                        <Fluent:Button Header="Salvar" x:Name="btnSave"/>
+                        <Fluent:Button Header="Salvar como..." x:Name="btnSaveWith"/>
+                        <Fluent:SeparatorTabItem/>
+                        <Fluent:Button Header="Informações" x:Name="btnShowFileInfo"/>
+                        <Fluent:Button Header="Imprimir..." x:Name="btnPrint"/>
+                        <Fluent:Button Header="Sair" x:Name="btnExit"/>
+                    </Fluent:BackstageTabControl>
+                </Fluent:Backstage>
+            </Fluent:Ribbon.Menu>
+
+            <Fluent:RibbonTabItem Header="Texto">
+                <Fluent:RibbonGroupBox Header="Prancheta">
+                    <Fluent:Button Header="Copiar" x:Name="btnCopy" LargeIcon="assets/imgs/copy.png"/>
+                    <Fluent:Button Header="Cortar" x:Name="btnCut" SizeDefinition="Small" Icon="assets/imgs/cut.png"/>
+                    <Fluent:Button Header="Colar" x:Name="btnPaste" Size="Small" Icon="assets/imgs/paste.png"/>
+                </Fluent:RibbonGroupBox>
+                <Fluent:RibbonGroupBox Header="Texto rápido">
+                    <Fluent:Button x:Name="btnAddDate" Header="Data e hora" LargeIcon="assets/imgs/clock.png"/>
+                    <Fluent:Button x:Name="btnSelectAll" Header="Selecionar tudo" SizeDefinition="Small" Icon="assets/imgs/select_all.png"/>
+                </Fluent:RibbonGroupBox>
+            </Fluent:RibbonTabItem>
+            <Fluent:RibbonTabItem Header="Editor">
+                <Fluent:RibbonGroupBox Header="Fonte" Icon="assets/imgs/font.png">
+                    <Fluent:ComboBox Header="Tamanho da fonte:" x:Name="cmbTamanhoFonte" 
+                                     SelectionChanged="cmbTamanhoFonte_SelectionChanged"
+                                     IsEditable="True">
+                        <ComboBoxItem Content="8px"/>
+                        <ComboBoxItem Content="9px"/>
+                        <ComboBoxItem Content="10px"/>
+                        <ComboBoxItem Content="11px"/>
+                        <ComboBoxItem Content="12px"/>
+                        <ComboBoxItem Content="14px"/>
+                        <ComboBoxItem Content="18px"/>
+                        <ComboBoxItem Content="24px"/>
+                        <ComboBoxItem Content="30px"/>
+                        <ComboBoxItem Content="48px"/>
+                        <ComboBoxItem Content="60px"/>
+                        <ComboBoxItem Content="72px"/>
+                        <ComboBoxItem Content="96px"/>
+                    </Fluent:ComboBox>
+                    <Fluent:ComboBox x:Name="cmbFonts" Header="Fonte:" 
+                                     ItemsSource="{Binding Source={x:Static Fonts.SystemFontFamilies}}" 
+                                     SelectionChanged="cmbFonts_SelectionChanged"/>
+                </Fluent:RibbonGroupBox>
+            </Fluent:RibbonTabItem>
+            <Fluent:RibbonTabItem Header="Ajuda">
+                <Fluent:RibbonGroupBox>
+                    <Fluent:Button x:Name="btnSobre" Header="Sobre"/>
+                </Fluent:RibbonGroupBox>
+            </Fluent:RibbonTabItem>
+        </Fluent:Ribbon>
+
+        <TextBox x:Name="txtMain" Grid.Row="1" Grid.ColumnSpan="2" FontSize="12"
+                 TextWrapping="Wrap" AcceptsReturn="True" VerticalScrollBarVisibility="Auto"/>
+
+        <Fluent:StatusBar Grid.Row="2" Grid.ColumnSpan="2">
+            <Fluent:StatusBarItem x:Name="pgbAsyncTasks" Visibility="Hidden" Title="AsyncTasksProgress" HorizontalAlignment="Left">
+                <ProgressBar Height="10" Width="70" IsIndeterminate="True" Margin="3, 0"/>
+            </Fluent:StatusBarItem>
+
+            <Separator HorizontalAlignment="Left"/>
+
+            <Fluent:StatusBarItem Title="FontSize" Content="-" x:Name="lblFontSize"  HorizontalAlignment="Right"/>
+
+            <Separator HorizontalAlignment="Right"/>
+
+            <Fluent:StatusBarItem Title="LastModified" Content="-" x:Name="lblLastModified" HorizontalAlignment="Right"/>
+
+            <Separator HorizontalAlignment="Right"/>
+
+            <Fluent:StatusBarItem Title="FontStyle" Content="-" x:Name="lblFontStyle" HorizontalAlignment="Right"/>
+
+            <Separator HorizontalAlignment="Right"/>
+
+            <Fluent:StatusBarItem Title="TextEncoder" Content="UTF-8" HorizontalAlignment="Right"/>
+        </Fluent:StatusBar>
+    </Grid>
+</Fluent:RibbonWindow>
