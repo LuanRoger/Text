@@ -97,8 +97,12 @@
                 </Fluent:RibbonGroupBox>
             </Fluent:RibbonTabItem>
             <Fluent:RibbonTabItem Header="Ajuda">
+                <Fluent:RibbonGroupBox Header="Configurações">
+                    <Fluent:CheckBox x:Name="chbSaveFont" Header="Salvar fonte" IsChecked="False" Click="chbSaveFont_Click"/>
+                    <Fluent:CheckBox x:Name="chbSaveFontSize" Header="Salvar tamanho da fonte" IsChecked="False" Click="chbSaveFontSize_Click"/>
+                </Fluent:RibbonGroupBox>
                 <Fluent:RibbonGroupBox>
-                    <Fluent:Button x:Name="btnSobre" Header="Sobre"/>
+                    <Fluent:Button x:Name="btnSobre" Header="Sobre" LargeIcon="assets/imgs/info.png"/>
                 </Fluent:RibbonGroupBox>
             </Fluent:RibbonTabItem>
         </Fluent:Ribbon>

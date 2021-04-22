@@ -21,6 +21,7 @@ namespace Text
     public partial class MainWindow
     {
         private readonly string _txtFilter = "Documento de Texto | *.txt";
+        private readonly Configuration configuration = new(true);
 
         private TextArchive textArchive { get; set; }
         public MainWindow(TextArchive textArchive = null)
@@ -29,6 +30,7 @@ namespace Text
 
             this.textArchive = textArchive;
             LoadWindowData();
+            LoadConfiguration();
             if (textArchive != null) LoadInfoText();
         }
         private void LoadInfoText()
@@ -39,9 +41,6 @@ namespace Text
         }
         private void LoadWindowData()
         {
-            cmbFonts.SelectedItem = new System.Windows.Media.FontFamily("Arial");
-            cmbTamanhoFonte.SelectedIndex = 4;
-
             #region EventHandlers
             btnAbrirArquivo.Click += BtnAbrirArquivo_Click;
             btnAbrirArquivoJanela.Click += BtnAbrirArquivoJanela_Click;
@@ -79,6 +78,16 @@ namespace Text
             shortcutCommand.InputGestures.Add(new KeyGesture(Key.O, ModifierKeys.Control));
             CommandBindings.Add(new CommandBinding(shortcutCommand, BtnAbrirArquivo_Click));
             #endregion
+        }
+        private void LoadConfiguration()
+        {
+            chbSaveFont.IsChecked = configuration.saveFont;
+            chbSaveFontSize.IsChecked = configuration.saveFontSize;
+
+            cmbFonts.SelectedItem = new System.Windows.Media.FontFamily(configuration.font);
+            ComboBoxItem comboBoxModelFontSizeItem = ((ComboBoxItem)cmbTamanhoFonte.Items[0]);
+            comboBoxModelFontSizeItem.Content = configuration.fontSize.ToString() + "px";
+            cmbTamanhoFonte.SelectedItem = comboBoxModelFontSizeItem;
         }
 
         private void TextArchive_OnModifyHasSaved(object sender, HasSavedEventArgs e)
@@ -220,21 +229,35 @@ namespace Text
         #region cmbSelectionChanged
         private void cmbFonts_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            txtMain.FontFamily = (System.Windows.Media.FontFamily)cmbFonts.SelectedItem;
-            lblFontStyle.Content = ((System.Windows.Media.FontFamily)cmbFonts.SelectedItem).ToString();
+            System.Windows.Media.FontFamily font = ((System.Windows.Media.FontFamily)cmbFonts.SelectedItem);
+
+            txtMain.FontFamily = font;
+            lblFontStyle.Content = font.ToString();
+            configuration.SetFont(font.ToString());
         }
         private void cmbTamanhoFonte_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             string fontSize = ((ComboBoxItem)cmbTamanhoFonte.SelectedItem).Content.ToString();
-            txtMain.FontSize = double.Parse(fontSize.Replace("px", string.Empty));
+            double fontDouble = double.Parse(fontSize.Replace("px", string.Empty));
+
+            txtMain.FontSize = fontDouble;
             lblFontSize.Content = fontSize;
+            configuration.SetFontSize(fontDouble);
         }
+        #endregion
+
+        #region ConfigurationCheckboxChange
+        private void chbSaveFont_Click(object sender, RoutedEventArgs e) =>
+            configuration.SetSaveFont((bool)chbSaveFont.IsChecked);
+        private void chbSaveFontSize_Click(object sender, RoutedEventArgs e) =>
+            configuration.SetSaveFontSize((bool)chbSaveFontSize.IsChecked);
         #endregion
 
         private void btnAddDate_Click(object sender, RoutedEventArgs e) => txtMain.Text += DateTime.Now;
         private void btnSelectAll_Click(object sender, RoutedEventArgs e) => txtMain.SelectAll();
         private void btnSobre_Click(object sender, RoutedEventArgs e) =>
-            MessageBox.Show($"Text v{Assembly.GetExecutingAssembly().GetName().Version}", 
+            MessageBox.Show($"Text v{Assembly.GetExecutingAssembly().GetName().Version}" +
+                            $"\nLicença: MIT License", 
                 "Sobre", MessageBoxButton.OK, MessageBoxImage.Information);
     }
 }
