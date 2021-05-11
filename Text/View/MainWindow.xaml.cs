@@ -1,29 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
 using Text.Models;
 using System.IO;
 using Microsoft.Win32;
-using System.Drawing.Text;
-using System.Drawing;
 using System.Reflection;
-using System.Threading;
+using Text.Commands;
 
 namespace Text
 {
     public partial class MainWindow
     {
-        private readonly string _txtFilter = "Documento de Texto | *.txt";
-        private readonly Configuration configuration = new(true);
-
         private TextArchive textArchive { get; set; }
+
         public MainWindow(TextArchive textArchive = null)
         {
             InitializeComponent();
@@ -59,8 +51,21 @@ namespace Text
             btnQaColar.Click += BtnPaste_Click;
             btnQaCortar.Click += BtnCut_Click;
 
-            if (textArchive != null)textArchive.OnModifyHasSaved += TextArchive_OnModifyHasSaved;
-
+            if (textArchive != null)
+            {
+                textArchive.OnModifyHasSaved += (sender, e) => {
+                    if(!e.saveState)
+                    {
+                        if (Title.Contains('*')) return;
+                        Title += '*';
+                    }
+                    else
+                    {
+                        try { Title.Remove(Title.IndexOf('*')); }
+                        catch { /*Nada*/ }
+                    }
+                };
+            }
             txtMain.TextChanged += delegate 
             {
                 if (textArchive == null) return;
@@ -79,29 +84,39 @@ namespace Text
             CommandBindings.Add(new CommandBinding(shortcutCommand, BtnAbrirArquivo_Click));
             #endregion
         }
+
         private void LoadConfiguration()
         {
-            chbSaveFont.IsChecked = configuration.saveFont;
-            chbSaveFontSize.IsChecked = configuration.saveFontSize;
+            chbSaveFont.IsChecked = Consts.CONFIGURATION.saveFont;
+            chbSaveFontSize.IsChecked = Consts.CONFIGURATION.saveFontSize;
+            chbSaveState.IsChecked = Consts.CONFIGURATION.saveLastFile;
 
-            cmbFonts.SelectedItem = new System.Windows.Media.FontFamily(configuration.font);
+            cmbFonts.SelectedItem = new System.Windows.Media.FontFamily(Consts.CONFIGURATION.font);
             ComboBoxItem comboBoxModelFontSizeItem = ((ComboBoxItem)cmbTamanhoFonte.Items[0]);
-            comboBoxModelFontSizeItem.Content = configuration.fontSize.ToString() + "px";
+            comboBoxModelFontSizeItem.Content = Consts.CONFIGURATION.fontSize + "px";
             cmbTamanhoFonte.SelectedItem = comboBoxModelFontSizeItem;
         }
-
-        private void TextArchive_OnModifyHasSaved(object sender, HasSavedEventArgs e)
+        private void RibbonWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            if(!e.saveState)
+            if (textArchive != null && !textArchive.hasSaved)
             {
-                if (Title.Contains('*')) return;
-                Title += '*';
+                MessageBoxResult dialogResult = MessageBox.Show("O arquivo não foi salvo, deseja salvar antes de sair?", "Aviso",
+                    MessageBoxButton.YesNoCancel, MessageBoxImage.Warning);
+
+                switch(dialogResult)
+                {
+                    case MessageBoxResult.Yes:
+                        BtnSave_Click(this, null);
+                        break;
+                    case MessageBoxResult.No:
+                        break;
+                    case MessageBoxResult.Cancel:
+                        e.Cancel = true;
+                        break;
+                }
             }
-            else
-            {
-                try { Title.Remove(Title.IndexOf('*')); }
-                catch { /*Nada*/ }
-            }
+            if (textArchive == null || !Consts.CONFIGURATION.saveLastFile) return;
+            Consts.CONFIGURATION.SetLastTextFile(textArchive.fileSource);
         }
 
         private void BtnExit_Click(object sender, RoutedEventArgs e) => Application.Current.Shutdown();
@@ -111,107 +126,44 @@ namespace Text
             throw new NotImplementedException();
         }
 
-        private void BtnShowFileInfo_Click(object sender, RoutedEventArgs e)
-        {
-            if(textArchive == null)
-            {
-                MessageBox.Show("Não há arquivo carregado", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
-            }
-            View.FileInfo fileInfo = new(textArchive);
-            fileInfo.Show();
-        }
+        private void BtnShowFileInfo_Click(object sender, RoutedEventArgs e) => new ShowFileInfoCommand(textArchive).Execute();
 
         #region SaveFile
         private async void BtnSaveWith_Click(object sender, RoutedEventArgs e)
         {
-            SaveFileDialog saveFileDialog = new SaveFileDialog();
-            saveFileDialog.Filter = _txtFilter;
-            bool? dialogResult = saveFileDialog.ShowDialog();
+            pgbAsyncTasks.Visibility = Visibility.Visible;
 
-            if (dialogResult == null || dialogResult == false) return;
+            SaveCommand saveCommand = new SaveCommand(SaveMode.SaveWith, textArchive, txtMain.Text);
+            await saveCommand.Execute();
+            textArchive = saveCommand.Result;
+            if (textArchive != null) LoadInfoText();
 
-            await WriteTextFile(saveFileDialog.FileName, txtMain.Text);
-
-            textArchive = new TextArchive
-                (
-                    fileName: Path.GetFileName(saveFileDialog.FileName),
-                    fileSource: saveFileDialog.FileName,
-                    hasSaved: true,
-                    text: File.ReadAllText(saveFileDialog.FileName),
-                    lastModified: File.GetLastWriteTimeUtc(saveFileDialog.FileName)
-                );
-            textArchive.OnModifyHasSaved += TextArchive_OnModifyHasSaved;
-            LoadInfoText();
+            pgbAsyncTasks.Visibility = Visibility.Hidden;
         }
 
         private async void BtnSave_Click(object sender, RoutedEventArgs e)
         {
-            if (textArchive == null)
-            {
-                BtnSaveWith_Click(this, null);
-                return;
-            }
-
-            await WriteTextFile(textArchive.fileSource, txtMain.Text);
-
-            textArchive.text = txtMain.Text;
-            LoadInfoText();
-            textArchive.SetHasSaved(true);
-        }
-        private async Task WriteTextFile(string fileSource, string text)
-        {
             pgbAsyncTasks.Visibility = Visibility.Visible;
 
-            List<Task> tasks = new()
-            {
-                File.WriteAllTextAsync(fileSource, text)
-            };
-            while(tasks.Count != 0)
-            {
-                Task taskObserver = await Task.WhenAny(tasks);
-                tasks.Remove(taskObserver);
-            }
+            SaveCommand saveCommand = new SaveCommand(SaveMode.Save, textArchive, txtMain.Text);
+            await saveCommand.Execute();
+            textArchive.SetHasSaved(true);
+
             pgbAsyncTasks.Visibility = Visibility.Hidden;
         }
         #endregion
 
         #region OpenFile
-        private void BtnAbrirArquivoJanela_Click(object sender, RoutedEventArgs e)
-        {
-            TextArchive textArchiveNewWindow = OpenTextFile();
-
-            if (textArchiveNewWindow == null) return;
-
-            MainWindow mainWindow = new MainWindow(textArchiveNewWindow);
-            mainWindow.Show();
-        }
+        private void BtnAbrirArquivoJanela_Click(object sender, RoutedEventArgs e) => 
+            new OpenCommand(OpenFileMode.NewWindow, textArchive).Execute();
 
         private void BtnAbrirArquivo_Click(object sender, RoutedEventArgs e)
         {
-            textArchive = OpenTextFile();
-            if (textArchive == null) return;
+            var command = new OpenCommand(OpenFileMode.Open, textArchive);
+            command.Execute();
+            textArchive = command.Result;
 
             LoadInfoText();
-        }
-        private TextArchive OpenTextFile()
-        {
-            OpenFileDialog openFileDialog = new OpenFileDialog();
-            openFileDialog.Filter = _txtFilter;
-            bool? result = openFileDialog.ShowDialog();
-
-            if (result == null || result == false) return null;
-
-            TextArchive fileTextToOpen = new TextArchive
-                (
-                    fileName: Path.GetFileName(openFileDialog.FileName),
-                    fileSource: openFileDialog.FileName,
-                    hasSaved: true,
-                    text: File.ReadAllText(openFileDialog.FileName),
-                    lastModified: File.GetLastWriteTimeUtc(openFileDialog.FileName)
-                );
-            fileTextToOpen.OnModifyHasSaved += TextArchive_OnModifyHasSaved;
-            return fileTextToOpen;
         }
         #endregion
 
@@ -222,42 +174,44 @@ namespace Text
             Clipboard.SetText(txtMain.SelectedText);
             txtMain.SelectedText = string.Empty;
         }
-        #endregion
-
         private void BtnCopy_Click(object sender, RoutedEventArgs e) => Clipboard.SetText(txtMain.SelectedText);
+        #endregion
 
         #region cmbSelectionChanged
         private void cmbFonts_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             System.Windows.Media.FontFamily font = ((System.Windows.Media.FontFamily)cmbFonts.SelectedItem);
+            new SelectFontCommand(font).Execute();
 
             txtMain.FontFamily = font;
             lblFontStyle.Content = font.ToString();
-            configuration.SetFont(font.ToString());
         }
         private void cmbTamanhoFonte_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             string fontSize = ((ComboBoxItem)cmbTamanhoFonte.SelectedItem).Content.ToString();
-            double fontDouble = double.Parse(fontSize.Replace("px", string.Empty));
+            if (fontSize != null) return;
 
+            double fontDouble = double.Parse(fontSize.Replace("px", string.Empty));
+            new SelectFontSizeCommand(fontDouble).Execute();
             txtMain.FontSize = fontDouble;
             lblFontSize.Content = fontSize;
-            configuration.SetFontSize(fontDouble);
         }
         #endregion
 
         #region ConfigurationCheckboxChange
         private void chbSaveFont_Click(object sender, RoutedEventArgs e) =>
-            configuration.SetSaveFont((bool)chbSaveFont.IsChecked);
+            Consts.CONFIGURATION.SetSaveFont((bool)chbSaveFont.IsChecked);
         private void chbSaveFontSize_Click(object sender, RoutedEventArgs e) =>
-            configuration.SetSaveFontSize((bool)chbSaveFontSize.IsChecked);
+            Consts.CONFIGURATION.SetSaveFontSize((bool)chbSaveFontSize.IsChecked);
+        private void chbSaveState_Click(object sender, RoutedEventArgs e)
+        {
+            Consts.CONFIGURATION.SetLastTextFile(string.Empty);
+            Consts.CONFIGURATION.SetSaveLastFile((bool)chbSaveState.IsChecked);
+        }
         #endregion
 
         private void btnAddDate_Click(object sender, RoutedEventArgs e) => txtMain.Text += DateTime.Now;
         private void btnSelectAll_Click(object sender, RoutedEventArgs e) => txtMain.SelectAll();
-        private void btnSobre_Click(object sender, RoutedEventArgs e) =>
-            MessageBox.Show($"Text v{Assembly.GetExecutingAssembly().GetName().Version}" +
-                            $"\nLicença: MIT License", 
-                "Sobre", MessageBoxButton.OK, MessageBoxImage.Information);
+        private void btnSobre_Click(object sender, RoutedEventArgs e) => new AboutCommand().Execute();
     }
 }

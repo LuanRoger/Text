@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
         WindowStartupLocation="CenterScreen"
-        Title="FileName*" Height="450" Width="800">
+        Title="FileName*" Height="450" Width="800" Closing="RibbonWindow_Closing">
 
     <Fluent:RibbonWindow.Resources>
         <SolidColorBrush x:Key="Fluent.Ribbon.Brushes.RibbonTabControl.Background">White</SolidColorBrush>
@@ -63,9 +63,9 @@
 
             <Fluent:RibbonTabItem Header="Texto">
                 <Fluent:RibbonGroupBox Header="Prancheta">
-                    <Fluent:Button Header="Copiar" x:Name="btnCopy" LargeIcon="assets/imgs/copy.png"/>
-                    <Fluent:Button Header="Cortar" x:Name="btnCut" SizeDefinition="Small" Icon="assets/imgs/cut.png"/>
-                    <Fluent:Button Header="Colar" x:Name="btnPaste" Size="Small" Icon="assets/imgs/paste.png"/>
+                    <Fluent:Button Header="Copiar" x:Name="btnCopy" LargeIcon="assets/imgs/copy.png" Click="BtnCopy_Click"/>
+                    <Fluent:Button Header="Cortar" x:Name="btnCut" SizeDefinition="Small" Icon="assets/imgs/cut.png" Click="BtnCut_Click"/>
+                    <Fluent:Button Header="Colar" x:Name="btnPaste" Size="Small" Icon="assets/imgs/paste.png" Click="BtnPaste_Click"/>
                 </Fluent:RibbonGroupBox>
                 <Fluent:RibbonGroupBox Header="Texto rápido">
                     <Fluent:Button x:Name="btnAddDate" Header="Data e hora" LargeIcon="assets/imgs/clock.png"/>
@@ -100,6 +100,7 @@
                 <Fluent:RibbonGroupBox Header="Configurações">
                     <Fluent:CheckBox x:Name="chbSaveFont" Header="Salvar fonte" IsChecked="False" Click="chbSaveFont_Click"/>
                     <Fluent:CheckBox x:Name="chbSaveFontSize" Header="Salvar tamanho da fonte" IsChecked="False" Click="chbSaveFontSize_Click"/>
+                    <Fluent:CheckBox x:Name="chbSaveState" Header="Continuar de onde parou" IsChecked="False" Click="chbSaveState_Click"/>
                 </Fluent:RibbonGroupBox>
                 <Fluent:RibbonGroupBox>
                     <Fluent:Button x:Name="btnSobre" Header="Sobre" LargeIcon="assets/imgs/info.png"/>

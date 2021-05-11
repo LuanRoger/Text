@@ -37,8 +37,7 @@ namespace Text.Models
         public event OnModifyHasSavedEventHandler OnModifyHasSaved;
         protected virtual void OnModifyHasSavedCall(bool saveState)
         {
-            if (OnModifyHasSaved == null) return;
-            OnModifyHasSaved(this, new HasSavedEventArgs { saveState =  saveState});
+            OnModifyHasSaved?.Invoke(this, new HasSavedEventArgs { saveState =  saveState});
         }
     }
 }
