@@ -4,7 +4,9 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Win32;
 
 namespace Text.Models
 {
@@ -24,6 +26,7 @@ namespace Text.Models
         }
         public string text { get; set; }
         public DateTime lastModified { get; set; }
+
         public TextArchive(string fileName, string fileSource, bool hasSaved, string text, DateTime lastModified)
         {
             this.fileName = fileName;
@@ -32,6 +35,39 @@ namespace Text.Models
             this.text = text;
             SetHasSaved(hasSaved);
             this.lastModified = lastModified;
+        }
+        public static TextArchive OpenFileArchive()
+        {
+            OpenFileDialog openFileDialog = new OpenFileDialog();
+            openFileDialog.Filter = Consts.TXTFILTER;
+            bool? result = openFileDialog.ShowDialog();
+
+            if (result is null or false) return null;
+
+            TextArchive fileTextToOpen = new TextArchive
+            (
+                fileName: Path.GetFileName(openFileDialog.FileName),
+                fileSource: openFileDialog.FileName,
+                hasSaved: true,
+                text: File.ReadAllText(openFileDialog.FileName),
+                lastModified: File.GetLastWriteTimeUtc(openFileDialog.FileName)
+            );
+            return fileTextToOpen;
+        }
+
+        public async Task WriteTextFileAsync()
+        {
+            List<Task> tasks = new()
+            {
+                File.WriteAllTextAsync(fileSource, text),
+            };
+            while(tasks.Count != 0)
+            {
+                Task taskObserver = await Task.WhenAny(tasks);
+                tasks.Remove(taskObserver);
+            }
+
+            SetHasSaved(true);
         }
         public delegate void OnModifyHasSavedEventHandler(object sender, HasSavedEventArgs e);
         public event OnModifyHasSavedEventHandler OnModifyHasSaved;

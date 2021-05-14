@@ -6,8 +6,8 @@ using System.Threading.Tasks;
 
 namespace Text.Commands
 {
-    interface ICommandAsyncWithReturn<T> : ICommandAsync
+    public interface Query<TResult>
     {
-        T Result {get;}
+        TResult Execute();
     }
 }

@@ -1,16 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using Text.Models;
-using System.IO;
-using Microsoft.Win32;
-using System.Reflection;
 using Text.Commands;
+using Text.Models;
 
-namespace Text
+namespace Text.View
 {
     public partial class MainWindow
     {
@@ -34,18 +30,6 @@ namespace Text
         private void LoadWindowData()
         {
             #region EventHandlers
-            btnAbrirArquivo.Click += BtnAbrirArquivo_Click;
-            btnAbrirArquivoJanela.Click += BtnAbrirArquivoJanela_Click;
-            btnSave.Click += BtnSave_Click;
-            btnSaveWith.Click += BtnSaveWith_Click;
-            btnShowFileInfo.Click += BtnShowFileInfo_Click;
-            btnPrint.Click += BtnPrint_Click;
-            btnExit.Click += BtnExit_Click;
-
-            btnAddDate.Click += btnAddDate_Click;
-
-            btnSobre.Click += btnSobre_Click;
-
             btnQaAbrir.Click += BtnAbrirArquivo_Click;
             btnQaSalvar.Click += BtnSave_Click;
             btnQaColar.Click += BtnPaste_Click;
@@ -53,7 +37,7 @@ namespace Text
 
             if (textArchive != null)
             {
-                textArchive.OnModifyHasSaved += (sender, e) => {
+                textArchive.OnModifyHasSaved += (_, e) => {
                     if(!e.saveState)
                     {
                         if (Title.Contains('*')) return;
@@ -69,7 +53,9 @@ namespace Text
             txtMain.TextChanged += delegate 
             {
                 if (textArchive == null) return;
+
                 textArchive.SetHasSaved(false); 
+                textArchive.text = txtMain.Text;
             };
             #endregion
 
@@ -133,9 +119,8 @@ namespace Text
         {
             pgbAsyncTasks.Visibility = Visibility.Visible;
 
-            SaveCommand saveCommand = new SaveCommand(SaveMode.SaveWith, textArchive, txtMain.Text);
-            await saveCommand.Execute();
-            textArchive = saveCommand.Result;
+            QueryInvoker<Task<TextArchive>> queryInvoker = new(new SaveWithCommand(textArchive));
+            textArchive = await queryInvoker.Invoker();
             if (textArchive != null) LoadInfoText();
 
             pgbAsyncTasks.Visibility = Visibility.Hidden;
@@ -145,9 +130,8 @@ namespace Text
         {
             pgbAsyncTasks.Visibility = Visibility.Visible;
 
-            SaveCommand saveCommand = new SaveCommand(SaveMode.Save, textArchive, txtMain.Text);
-            await saveCommand.Execute();
-            textArchive.SetHasSaved(true);
+            CommandInvokerAsync commandInvokerAsync = new CommandInvokerAsync(new SaveCommand(textArchive));
+            await commandInvokerAsync.Invoker();
 
             pgbAsyncTasks.Visibility = Visibility.Hidden;
         }
@@ -155,13 +139,12 @@ namespace Text
 
         #region OpenFile
         private void BtnAbrirArquivoJanela_Click(object sender, RoutedEventArgs e) => 
-            new OpenCommand(OpenFileMode.NewWindow, textArchive).Execute();
+            new CommandInvoker(new OpenInWindowCommand()).Invoker();
 
         private void BtnAbrirArquivo_Click(object sender, RoutedEventArgs e)
         {
-            var command = new OpenCommand(OpenFileMode.Open, textArchive);
-            command.Execute();
-            textArchive = command.Result;
+            QueryInvoker<TextArchive> queryInvoker = new(new OpenCommand());
+            textArchive = queryInvoker.Invoker();
 
             LoadInfoText();
         }
@@ -180,33 +163,33 @@ namespace Text
         #region cmbSelectionChanged
         private void cmbFonts_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            System.Windows.Media.FontFamily font = ((System.Windows.Media.FontFamily)cmbFonts.SelectedItem);
-            new SelectFontCommand(font).Execute();
+            System.Windows.Media.FontFamily font = (System.Windows.Media.FontFamily)cmbFonts.SelectedItem;
+            new CommandInvoker(new SelectFontCommand(font)).Invoker();
 
             txtMain.FontFamily = font;
             lblFontStyle.Content = font.ToString();
         }
         private void cmbTamanhoFonte_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            string fontSize = ((ComboBoxItem)cmbTamanhoFonte.SelectedItem).Content.ToString();
-            if (fontSize != null) return;
+            QueryInvoker<double> queryInvoker = new(new SelectFontSizeCommand
+                (((ComboBoxItem)cmbTamanhoFonte.SelectedItem).Content.ToString()));
+            double fontSize = queryInvoker.Invoker();
 
-            double fontDouble = double.Parse(fontSize.Replace("px", string.Empty));
-            new SelectFontSizeCommand(fontDouble).Execute();
-            txtMain.FontSize = fontDouble;
-            lblFontSize.Content = fontSize;
+
+            txtMain.FontSize = fontSize;
+            lblFontSize.Content = fontSize.ToString();
         }
         #endregion
 
         #region ConfigurationCheckboxChange
         private void chbSaveFont_Click(object sender, RoutedEventArgs e) =>
-            Consts.CONFIGURATION.SetSaveFont((bool)chbSaveFont.IsChecked);
+            Consts.CONFIGURATION.SetSaveFont(chbSaveFont.IsChecked != null && (bool)chbSaveFont.IsChecked);
         private void chbSaveFontSize_Click(object sender, RoutedEventArgs e) =>
-            Consts.CONFIGURATION.SetSaveFontSize((bool)chbSaveFontSize.IsChecked);
+            Consts.CONFIGURATION.SetSaveFontSize(chbSaveFontSize.IsChecked != null && (bool)chbSaveFontSize.IsChecked);
         private void chbSaveState_Click(object sender, RoutedEventArgs e)
         {
             Consts.CONFIGURATION.SetLastTextFile(string.Empty);
-            Consts.CONFIGURATION.SetSaveLastFile((bool)chbSaveState.IsChecked);
+            Consts.CONFIGURATION.SetSaveLastFile(chbSaveState.IsChecked != null && (bool)chbSaveState.IsChecked);
         }
         #endregion
 

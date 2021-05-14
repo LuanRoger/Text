@@ -6,6 +6,7 @@ using System.Linq;
 using System.IO;
 using System.Windows;
 using Text.Models;
+using Text.View;
 
 namespace Text
 {

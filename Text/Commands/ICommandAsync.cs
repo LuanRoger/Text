@@ -7,7 +7,7 @@ using System.Windows;
 
 namespace Text.Commands
 {
-    interface ICommandAsync
+    public interface ICommandAsync
     {
         public Task Execute();
     }

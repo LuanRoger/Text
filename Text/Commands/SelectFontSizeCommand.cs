@@ -6,16 +6,22 @@ using System.Threading.Tasks;
 
 namespace Text.Commands
 {
-    class SelectFontSizeCommand : ICommand
+    class SelectFontSizeCommand : Query<double>
     {
-        public double fontSize { get; }
-        public SelectFontSizeCommand(double fontSize)
+        private string fontSize { get; }
+
+        public SelectFontSizeCommand(string fontSize)
         {
             this.fontSize = fontSize;
         }
-        public void Execute()
+        public double Execute()
         {
-            Consts.CONFIGURATION.SetFontSize(fontSize);
+            double fontiSizeConvertDouble = new Reciver().ConvertDouble(fontSize);
+
+
+            Consts.CONFIGURATION.SetFontSize(fontiSizeConvertDouble);
+
+            return fontiSizeConvertDouble;
         }
     }
 }
